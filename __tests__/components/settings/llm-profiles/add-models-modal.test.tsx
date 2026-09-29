@@ -92,7 +92,7 @@ const MODELS = {
       name: "deepseek-v4-flash",
       verified: true,
       free: false,
-      default: false,
+      default: true,
     },
     {
       provider: "openhands",
