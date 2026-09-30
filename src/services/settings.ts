@@ -33,7 +33,7 @@ export const DEFAULT_SETTINGS: Settings = {
   title_llm_profile: null,
   agent_settings_schema: null,
   agent_settings: {
-    schema_version: 6,
+    schema_version: 7,
     agent_kind: "openhands",
     agent: "CodeActAgent",
     llm: {
@@ -47,8 +47,6 @@ export const DEFAULT_SETTINGS: Settings = {
       critic_enabled: false,
       enable_iterative_refinement: false,
     },
-    enable_sub_agents: false,
-    enable_switch_llm_tool: true,
     mcp_config: {},
   },
   conversation_settings_schema: null,
