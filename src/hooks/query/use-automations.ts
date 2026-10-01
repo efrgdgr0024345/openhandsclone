@@ -9,6 +9,7 @@ import { useTracking } from "#/hooks/use-tracking";
 import { uniqueById } from "#/utils/unique-by-id";
 import type {
   Automation,
+  AutomationCreatedByFilter,
   AutomationSpec,
   AutomationsResponse,
 } from "#/types/automation";
@@ -25,6 +26,7 @@ const AUTOMATIONS_PAGE_SIZE = 50;
 interface UseAutomationsOptions {
   /** Automations per request; at most 100. A count-only caller passes 1. */
   pageSize?: number;
+  createdBy?: AutomationCreatedByFilter;
   enabled?: boolean;
 }
 
@@ -35,17 +37,21 @@ interface UseAutomationsOptions {
  * listed once.
  */
 export function useAutomations(options: UseAutomationsOptions = {}) {
-  const { pageSize = AUTOMATIONS_PAGE_SIZE, enabled = true } = options;
+  const {
+    pageSize = AUTOMATIONS_PAGE_SIZE,
+    createdBy,
+    enabled = true,
+  } = options;
   const active = useActiveBackend();
   return useInfiniteQuery({
     queryKey: [
       ...AUTOMATIONS_QUERY_KEY,
-      { pageSize },
+      { pageSize, createdBy },
       active.backend.id,
       active.orgId,
     ],
     queryFn: ({ pageParam }) =>
-      AutomationService.getAutomations(pageSize, pageParam),
+      AutomationService.getAutomations(pageSize, pageParam, createdBy),
     initialPageParam: 0,
     getNextPageParam: (lastPage, _pages, lastOffset) => {
       const nextOffset = lastOffset + lastPage.automations.length;
@@ -57,6 +63,14 @@ export function useAutomations(options: UseAutomationsOptions = {}) {
       total: data.pages.at(-1)?.total ?? 0,
     }),
     staleTime: 0,
+    // A new filter keeps the last list on screen until its first page lands;
+    // another backend or org starts empty, so its list never shows foreign rows.
+    placeholderData: (previousData, previousQuery) => {
+      const [, , backendId, orgId] = previousQuery?.queryKey ?? [];
+      return backendId === active.backend.id && orgId === active.orgId
+        ? previousData
+        : undefined;
+    },
     enabled,
   });
 }
